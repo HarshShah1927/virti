@@ -1,65 +1,46 @@
 # A Little Date Invitation
 
-A small, mobile-first romantic invitation built with React and Vite. The experience runs entirely in the browser: no backend, tracking, analytics, or external API is used.
+A romantic, mobile-first invitation built with React and Vite. The application uses a Vercel serverless function to send Virti's selected date, time, and activity to Harsh's email address after she taps the email button.
 
 ## Run locally
 
-Install dependencies:
-
 ```sh
 npm install
-```
-
-Start the development server:
-
-```sh
 npm run dev
 ```
 
-Vite prints the local address in the terminal (usually `http://localhost:5173`).
+Vite prints the local development URL (usually `http://localhost:5173`). The Vercel API function runs on Vercel; to test the function locally, use the Vercel CLI with `vercel dev` after configuring the environment variables below.
 
-## Build and preview
-
-Create the production build:
+## Build
 
 ```sh
 npm run build
-```
-
-Preview the production build locally:
-
-```sh
 npm run preview
 ```
 
-The generated site is placed in `dist/`.
+The production frontend is generated in `dist/`.
+
+## Email setup
+
+Email is sent by the Vercel function in `api/response.js` through the [Resend email API](https://resend.com/docs/send-with-nodejs). The API key is read only on the server and is never included in the frontend bundle.
+
+1. Create a Resend account and an API key with email sending access.
+2. Verify a sender domain in Resend and set up the DNS records Resend provides. The sender address must use that verified domain.
+3. In Vercel, open the project **Settings → Environment Variables** and add:
+   - `RESEND_API_KEY` — your Resend API key.
+   - `EMAIL_FROM` — a sender using your verified domain, for example `Date Invitation <hello@yourdomain.com>`.
+4. Apply the variables to Production (and Preview if desired), then redeploy.
+
+Do not add the Resend API key to a `VITE_` variable or commit it to source control. The function sends only to `harshmumbai1927@gmail.com`. It validates the date, time, and activity, and includes a simple bot honeypot. Delivery requires the environment variables and a verified sender domain to be configured.
 
 ## Deploy to Vercel
 
-1. Push this project to a GitHub, GitLab, or Bitbucket repository.
-2. In Vercel, choose **Add New → Project** and import that repository.
-3. Leave the framework preset as **Vite**. Vercel will use `npm run build` and `dist` as the output directory.
-4. Select **Deploy**. No environment variables or additional configuration are needed.
+Import the repository into Vercel as a Vite project, keep the default `npm run build` build command and `dist` output directory, add the email environment variables above, and deploy. Vercel automatically deploys JavaScript functions placed in the root `api/` directory. See the [Vercel Node.js Functions documentation](https://vercel.com/docs/functions/runtimes/node-js).
 
-You can also deploy with the Vercel CLI by running `vercel` in the project directory and following its prompts.
+## Personalize
 
-## Personalize the invitation
+- Replace `src/assets/couple-photo.jpg` to change the photo; keep the filename or update its import in `src/App.jsx`.
+- Change the name and invitation copy in `src/App.jsx`.
+- Adjust styling in `src/index.css`.
 
-- **Photo:** Replace `src/assets/couple-photo.jpg` with your photo. Keep the same filename and format, or update the import at the top of `src/App.jsx` to match the new filename. The image is bundled locally with the site.
-- **Name and invitation text:** Edit the visible copy in `src/App.jsx`. The name currently appears in the intro and date question.
-- **Colors, spacing, and typography:** Edit `src/index.css`.
-
-## Project structure
-
-```text
-src/
-  assets/
-    couple-photo.jpg
-  App.jsx
-  index.css
-  main.jsx
-index.html
-package.json
-```
-
-The date form prevents past dates, requires a time and activity before confirmation, and keeps the selected information in React state in the browser.
+The selected date details are sent to the configured email provider only after the recipient taps the button. The site does not store submissions in a database.

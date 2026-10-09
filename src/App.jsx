@@ -21,12 +21,33 @@ export default function App() {
   const [time, setTime] = useState('');
   const [place, setPlace] = useState('');
   const [customPlace, setCustomPlace] = useState('');
+  const [website, setWebsite] = useState('');
+  const [sending, setSending] = useState(false);
+  const [emailStatus, setEmailStatus] = useState('');
   const today = useMemo(() => new Date().toLocaleDateString('en-CA'), []);
   const chosenPlace = place === 'Your choice' ? customPlace.trim() : place;
   const validDate = date && date >= today;
   const canConfirm = validDate && time && chosenPlace;
-
   function dodgeNo() { setNoCount((count) => count + 1); }
+
+  async function sendResponse() {
+    setSending(true);
+    setEmailStatus('');
+    try {
+      const response = await fetch('/api/response', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date, time, place: place === 'Your choice' ? `Custom: ${chosenPlace}` : chosenPlace, website }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not send the response.');
+      setEmailStatus('Sent! Harsh will get your date details by email. ❤️');
+    } catch (error) {
+      setEmailStatus(error.message || 'Could not send the response. Please try again.');
+    } finally {
+      setSending(false);
+    }
+  }
 
   return <main className="scene">
     <div aria-hidden="true" className="float-heart heart-one">♡</div>
@@ -73,9 +94,12 @@ export default function App() {
         <div className="details"><p><span>📅</span>{formatDate(date)}</p><p><span>⏰</span>{formatTime(time)}</p><p><span>📍</span>{chosenPlace}</p></div>
         <h2>You + Me = Date. 🫶🏻</h2>
         <p className="love-note">I’ll see you there, pretty girl. ❤️</p>
+        <label className="honeypot" aria-hidden="true">Leave this field empty<input tabIndex={-1} autoComplete="off" name="website" value={website} onChange={(event) => setWebsite(event.target.value)} /></label>
+        <button className="button primary email-button" type="button" onClick={sendResponse} disabled={sending}>{sending ? 'Sending…' : 'Send our date to Harsh by email'} <span aria-hidden="true">→</span></button>
+        <p className="email-note" aria-live="polite">{emailStatus || 'Your date details will be emailed to Harsh when you tap the button.'}</p>
         <div className="cant-wait">Can’t wait 🥹 <span aria-hidden="true">♥</span></div>
       </section>}
     </div>
-    <p className="privacy">Just between us · Nothing is sent anywhere</p>
+    <p className="privacy">Your details stay here unless you choose to email them</p>
   </main>;
 }
